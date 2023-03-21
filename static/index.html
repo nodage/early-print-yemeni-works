@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<html>
+    <head>
+        <title>EPYW</title>
+        <script src="https://d3js.org/d3.v4.js"></script>
+        <script src="https://d3js.org/d3-geo-projection.v2.min.js"></script>
+        <link 
+            rel="stylesheet" 
+            href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css"
+            integrity="sha256-kLaT2GOSpHechhsozzB+flnD+zUyjE2LlfWPgU04xyI="
+            crossorigin=""
+        />
+        <script 
+            src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"
+            integrity="sha256-WBkoXOwTeyKclOHuWtc+i2uENFpDZ9YPdf5Hf+D7ewM="
+            crossorigin="">
+        </script>
+        <link type="text/css" rel="stylesheet" href="EPYW.css"/>
+        <link href="https://fonts.googleapis.com/css?family=Cinzel+Decorative:700|Cinzel:700|Raleway:400,400i&amp;subset=latin-ext" rel="stylesheet">
+    </head>
+
+    <body>
+        <div class = "pagetitle"><h1>Early Prints Yemeni Works on map</h1></div>
+        <div id="settings">
+            <h3>Visualization settings</h3>
+            <div id="who_setting">
+                <div id="who_modality">
+
+                    <label for="everyone">Every author/editor recorded:</label>
+                    <input type="radio" value="everyone" id="everyone">
+                    <label for="someone">or select a particular name:</label>
+                    <input type="radio" value="someone" id="someone">
+                </div>
+            </div>
+            <div id="when_setting">
+                <div id="when_modality">
+
+                    <label for="whenever">All recorded years:</label>
+                    <input type="radio" value="whenever" id="whenever">
+                    <label for="someyear">or select a particular year:</label>
+                    <input type="radio" value="someyear" id="someyear">
+                </div>
+            </div>
+            <button id="QuerySubmitButton" class="submitbutton">Visualization</button>
+        </div>
+        
+        <div id="EPYWmap"></div>
+        <div id="prints">
+            <ol id="prints-list"></ol>
+        </div>
+            
+            
+
+        <script language="javascript" type="text/javascript" src="index.js"></script>
+    </body>
+</html>
