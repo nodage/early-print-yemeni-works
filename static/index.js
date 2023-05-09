@@ -210,7 +210,7 @@ function MakingPie(placedata, params, pieclass){
         var data_ready = pie_obj(d3.entries(data));
 
         var arcGenerator = d3.arc()
-            .innerRadius(0)
+            .innerRadius(radius/10)
             .outerRadius(radius)
         
         svg
