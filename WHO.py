@@ -3,7 +3,7 @@ import re
 
 con = sqlite3.connect('EPYW.db')
 cur = con.cursor()
-
+"""
 who_query = 'SELECT Key, Author, Editor FROM EPYW_v2;'
 cur.execute(who_query)
 who_list = cur.fetchall()
@@ -34,7 +34,7 @@ for person in who_set:
     print(person)
 
         #print(multiple_who)
-
+"""
 """
 #CREATE TABLE PRINTS
 tbl_prints = '''CREATE TABLE PRINTS(
@@ -44,6 +44,7 @@ tbl_prints = '''CREATE TABLE PRINTS(
     Editor TEXT,
     Publisher TEXT
 );'''
+"""
 """
 #CREATE TABLE who_ids
 
@@ -70,12 +71,12 @@ for k,v in dic_work_who.items():
     for person in v:
         sql_cmd = 'INSERT INTO WHO(Key, NAME) VALUES ("{}", "{}");'.format(k,person)
         #cur.execute(sql_cmd)
-
+"""
 """UPDATE WHO
 SET ID_WHO = WHO_IDS.ID_WHO
 FROM WHO_IDS
 WHERE WHO_IDS.name = WHO.name;"""
-
+"""
 tbl_where = '''CREATE TABLE WHERE_prints(
     Key TEXT,
     PLACE_STR TEXT,
@@ -115,6 +116,7 @@ for key, place in all_places:
     
      
 #cur.execute(tbl_where)
+"""
 """UPDATE WHERE_prints
 SET PLACE_STR = PLACE_IDS.PLACE_STR
 FROM PLACE_IDS
@@ -143,6 +145,61 @@ SELECT EPYW_v2.Key, EPYW_v2.PublicationYear, YEAR_IDS.ID_YEAR
 FROM EPYW_v2 JOIN YEAR_IDS ON EPYW_v2.PublicationYear=YEAR_IDS.YEAR
 WHERE EPYW_v2.PublicationYear;
 """
+publ_query = 'SELECT Key, Publisher FROM EPYW_v2;'
+cur.execute(publ_query)
+publ_list = cur.fetchall()
+
+dic_work_publ = {}
+for publ in publ_list:
+    key = publ[0]
+    publisher = publ[1]
+    if publisher and ',' in publisher:
+        multiple_publisher = [re.sub('^\s', '', re.sub('\s$', '', publi)) for publi in publisher.split(',')]
+        dic_work_publ[key] = multiple_publisher
+    elif publisher:
+        dic_work_publ[key] = [publisher]
+        #print(editor)
+    else:
+        dic_work_publ[key] = [None]
+publ_set = set()
+for k, v in dic_work_publ.items():
+    for w in v:
+        publ_set.add(w)
+
+for publ in publ_set:
+    print(publ)
+
+#CREATE TABLE PUBLISHER_ids
+
+tbl_publ_ids = '''CREATE TABLE PUBLISHER_IDS(
+    ID_PUBLISHER INTEGER PRIMARY KEY AUTOINCREMENT,
+    NAME TEXT
+);'''
+cur.execute(tbl_publ_ids)
+
+for publ in publ_set:
+    sql_cmd = 'INSERT INTO PUBLISHER_IDS(NAME) VALUES ("{}");'.format(publ)
+    cur.execute(sql_cmd)
+
+tbl_publishers = '''CREATE TABLE PUBLISHERS(
+    Key TEXT,
+    NAME TEXT,
+    ID_PUBLISHER INTEGER,
+    FOREIGN KEY (Key) REFERENCES PRINTS(Key)
+    FOREIGN KEY (ID_PUBLISHER) REFERENCES PUBLISHER_IDS(ID_PUBLISHER) 
+);'''
+cur.execute(tbl_publishers)
+
+for k,v in dic_work_publ.items():
+    for publisher in v:
+        sql_cmd = 'INSERT INTO PUBLISHERS(Key, NAME) VALUES ("{}", "{}");'.format(k,publisher)
+        cur.execute(sql_cmd)
+
+"""UPDATE PUBLISHERS
+SET ID_PUBLISHER = PUBLISHER_IDS.ID_PUBLISHER
+FROM PUBLISHER_IDS
+WHERE PUBLISHER_IDS.name = PUBLISHERS.name;"""
+
 
 con.commit()
 con.close()

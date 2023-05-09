@@ -5,6 +5,7 @@
         <title>EPYW</title>
         <script src="https://d3js.org/d3.v4.js"></script>
         <script src="https://d3js.org/d3-geo-projection.v2.min.js"></script>
+        <script src="https://d3js.org/d3-scale-chromatic.v1.min.js"></script>
         <link 
             rel="stylesheet" 
             href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css"
@@ -20,9 +21,9 @@
         <link href="https://fonts.googleapis.com/css?family=Cinzel+Decorative:700|Cinzel:700|Raleway:400,400i&amp;subset=latin-ext" rel="stylesheet">
     </head>
 
-    <body>
-        <div class = "pagetitle"><h1>Early Prints Yemeni Works on map</h1></div>
-        <div id="settings">
+    <body id = "page-body" >
+        <div class = "title-block pagetitle"><h1>Early Prints Yemeni Works on map</h1></div>
+        <div id="settings" class="query-block" >
             <h3>Visualization settings</h3>
             <div id="who_setting">
                 <div id="who_modality">
@@ -44,12 +45,9 @@
             </div>
             <button id="QuerySubmitButton" class="submitbutton">Visualization</button>
         </div>
-        
-        <div id="EPYWmap"></div>
-        <div id="prints">
-            <ol id="prints-list"></ol>
+        <div id= "main" class="only_map">
+            <div id="EPYWmap"></div>
         </div>
-            
             
 
         <script language="javascript" type="text/javascript" src="index.js"></script>

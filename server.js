@@ -141,3 +141,81 @@ app.post('/results', (request, response) => {
 	//console.log(who);
 	//console.log(when);
 });
+
+app.post('/analytics', (request, response) => {
+	var params = request.body;
+	console.log(params);
+	var prints_IDs = params.prints_IDs;
+	var who = params.who;
+	var when = params.when;
+	if (who == 'all' && when== 'all') {
+		var printsids_JOIN = '("' + prints_IDs.join('","')+ '")';
+		var by_persons_sql = `SELECT NAME FROM WHO WHERE Key IN ${printsids_JOIN};`;
+		var by_years_sql = `SELECT YEAR FROM WHEN_prints WHERE Key IN ${printsids_JOIN};`;
+		var by_publishers_sql = `SELECT NAME FROM PUBLISHERS WHERE Key IN ${printsids_JOIN};`;
+		console.log(by_persons_sql);
+		console.log(by_years_sql);
+		
+		db.all(by_persons_sql, (err_bypersons, bypersons) => {
+			if (err_bypersons) {
+				console.log(err_bypersons);
+				response.end;
+				return;
+			}
+			console.log('by_persons_sql executed');
+			var persons = {};
+			Array.from(bypersons).forEach(pers => {
+				console.log(pers.NAME);
+				if (pers.NAME in persons) {
+					persons[pers.NAME] +=1;
+				} else {
+					persons[pers.NAME] = 1;
+				}
+			
+			});
+			db.all(by_years_sql, (err_byyears, byyears) => {
+				if (err_byyears) {
+					console.log(err_byyears);
+					response.end;
+					return;
+				}
+				console.log('by_years_sql executed');
+				var years = {};
+				Array.from(byyears).forEach(year => {
+					console.log(year.YEAR);
+					if (year.YEAR in years) {
+						years[year.YEAR] +=1;
+					} else {
+						years[year.YEAR] = 1;
+					}
+				
+				});
+				db.all(by_publishers_sql, (err_bypublis, bypublis) => {
+					if (err_bypublis) {
+						console.log(err_bypublis);
+						response.end;
+						return;
+					}
+					console.log('by_publishers_sql executed');
+					var publishers = {};
+					Array.from(bypublis).forEach(publi => {
+						console.log(publi.NAME);
+						if (publi.NAME in publishers) {
+							publishers[publi.NAME] +=1;
+						} else {
+							publishers[publi.NAME] = 1;
+						}
+					
+					});
+					return response.json({data: {persons:persons, years:years, publishers:publishers}});
+				});
+			
+			});
+		});
+		
+
+	}else {
+		return response.json({data: "coucou je suis là!"});
+	}
+	
+});

@@ -7,33 +7,278 @@ L.svg().addTo(EPYWmap);
 
 
 
-function d3circles(pointsdata) {
-    
-    console.log(pointsdata.length);
-    //console.log(EPYWmap);
+function d3circles(pointsdata, dic_markers,params) {
+    points_dic = {};
+    Array.from(pointsdata).forEach(pdata => {
+        points_dic[pdata.id_place] = [pdata.LATITUDE, pdata.LONGITUD];
+
+    });
+
     d3.select("#EPYWmap")
         .select("svg")
         .selectAll('*')
         .remove()
     
-    const data = d3.select("#EPYWmap")
+    
+    
+    d3.select("#EPYWmap")
         .select("svg")
         .selectAll("myCircles")
         .data(pointsdata)
         .enter()
-    const circles = data.append("circle")
+        .append("g")
+        .append("circle")
+            .attr("id", function(d){ return d.id_place})
             .attr("cx", function(d){ return EPYWmap.latLngToLayerPoint([d.LATITUDE, d.LONGITUD]).x })
             .attr("cy", function(d){ return EPYWmap.latLngToLayerPoint([d.LATITUDE, d.LONGITUD]).y })
             .attr("r", function(d){ return d.radius*EPYWmap._zoom})
             .style("fill", "red")
+            .style("cursor", "pointer")
             .attr("stroke", "red")
             .attr("stroke-width", 3)
-            .attr("fill-opacity", .4)
-            //.on("click", function(d) {return printlist(d)});
+            .attr("fill-opacity", .5)
     
-    console.log(EPYWmap._zoom);
-    //circles.on("click", printlist(d));
+    //console.log(EPYWmap._zoom);
+    
     EPYWmap.on("moveend", update);
+    d3.selectAll('circle')
+      .attr('pointer-events', "visiblePainted")
+      .each(function(d){
+        var place_id = d.id_place;
+        d3.select(this)
+          .on('click', (event)=>{
+            //console.log(d3.select(this).attr('cx'));
+            d3.selectAll('circle').style("fill", "red");
+            d3.selectAll('circle').attr("stroke", "red");
+            //d3.select(this).style("fill", "#f1f132");
+            d3.select(this).attr("stroke", "blue");
+            
+            //change class div main
+            var div_main = document.getElementById("main");
+            var main_class = div_main.getAttribute("class");
+            var map = document.getElementById("EPYWmap");
+            var map_class = map.getAttribute("class")
+            //map.setAttribute("class", "map-onleft");
+            //console.log(main_class);
+            if (main_class=="only_map"){
+                div_main.setAttribute("class", "map_parts");
+                /*console.log(map.getAttribute("class"));
+                if (!map_class.startsWith("map-onleft")){
+                    map.setAttribute("class", "map-onleft "+ map_class);
+                    EPYWmap.invalidateSize();
+                    
+                }
+                console.log(map.getAttribute("class"));*/
+            }
+            if (!map_class.startsWith("map-onleft")){
+                map.setAttribute("class", "map-onleft "+ map_class);
+                //EPYWmap.invalidateSize();
+                
+            }
+            EPYWmap.invalidateSize();
+            //
+            //create div prints if not exists
+            if (!document.getElementById("prints")){
+                var prints_div = document.createElement("div");
+                prints_div.setAttribute("id", "prints");
+                prints_div.setAttribute("class", "data_visualization");
+                var print_num = document.createElement("h3");
+                var prints_list = document.createElement("ol");
+                prints_list.setAttribute("id", "prints-list");
+                prints_div.appendChild(print_num);
+                prints_div.appendChild(prints_list);
+                div_main.appendChild(prints_div);
+
+            }
+            //EPYWmap.panTo(d3.select(this).attr('cx'), d3.select(this).attr("cy"));
+            var index = d3.select(this).attr("id");
+            /*index = parseInt(index) - 1;
+            console.log(index);*/
+            var point_data = points_dic[index];
+            //console.log(point_data);
+            var current_zoom = EPYWmap._zoom;
+            
+            EPYWmap.setView(point_data, current_zoom);
+            
+            var prints_keys = dic_markers[place_id];
+
+            var prints_div = document.getElementById("prints");
+            var print_num = prints_div.getElementsByTagName('h3')[0];
+            var prints_list = document.getElementById('prints-list');
+            prints_list.innerHTML= '';
+            print_num.innerText = `${prints_keys.length.toString()} print(s) registered:`;
+            
+            Array.from(prints_keys).forEach((pkey)=>{
+                var print_data = prints_info[pkey];
+                var print_li = document.createElement('li');
+                print_li.innerHTML = `<span>Title: ${print_data.title}</span><br/><span>Author: ${print_data.author}</span>, <span>Editor: ${print_data.editor}<span><br/> <span>Publisher: ${print_data.publisher}</span>`
+                //var print_li_txt = document.createTextNode(`Title: ${print_data.title}\n Author: ${print_data.author}, Editor: ${print_data.editor},\n Publisher: ${print_data.publisher}.`)
+                //print_li.appendChild(print_li_txt);
+                prints_list.appendChild(print_li);
+            });
+            if (document.getElementById("AnalyticsButton")) {
+                if (document.getElementById("placedatapies")){
+                    document.getElementById("placedatapies").remove();
+                }
+                
+                document.getElementById("AnalyticsButton").remove();
+            }
+
+            if (params.who=="all" && params.when == "all") {
+                
+                var analytics_button = document.createElement("button");
+                analytics_button.setAttribute("id", "AnalyticsButton");
+                var analyticsbutton_txt = document.createTextNode("See Place Data Analytics");
+                analytics_button.appendChild(analyticsbutton_txt);
+                prints_div.appendChild(analytics_button);
+                AnalyticsButtonBehavior(prints_keys, params, 'placedatapie');
+            }
+            
+            
+          })
+          .on('mouseenter', (event)=>{
+            console.log('mouse is over me');
+            d3.select(this).style("fill", "blue");
+            
+          })
+          .on('mouseleave', (event)=>{
+            if (d3.select(this).attr('stroke') == 'red') {
+                d3.select(this).style("fill", "red");
+            }
+          });
+        
+
+      });
+        
+}
+function angle(d) {
+    var a = (d.startAngle + d.endAngle) * 90 / Math.PI - 90;
+    return a > 90 ? a - 180 : a;
+}
+function MakingPie(placedata, params, pieclass){
+    var prints_div = document.getElementById("prints");
+    var pies_div = document.createElement("div");
+    pies_div.setAttribute("id", pieclass+"s");
+    prints_div.appendChild(pies_div);
+    pies_div = document.getElementById(pieclass+"s");
+    for (const key in placedata) {
+        
+        var pie_id = key + "_" + pieclass;
+        var pie = document.createElement("div");
+        pie.setAttribute("class", pieclass);
+        pie.setAttribute("id", pie_id);
+        var pie_label = document.createElement("label");
+        var pie_label_txt = "<br/>By "+ key;
+
+        pie_label.innerHTML = pie_label_txt;
+        pie_label.setAttribute("for", pie_id);
+        pie_label.setAttribute("class", "pie-label");
+
+        pies_div.appendChild(pie_label);
+        pies_div.appendChild(pie);
+        
+
+        pie = document.getElementById(pie_id);
+        var width = pie.offsetWidth;
+        var height = 600;
+        var margin = 50;
+
+        var radius = Math.min(width, height) / 2 - margin;
+
+        var svg = d3.select("#"+pie_id)
+                    .append("svg")
+                      .attr("width", width)
+                      .attr("height", height)
+                    .append("g")
+                      .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")");
+        console.log(svg);
+
+        var data = placedata[key];
+
+        var sum = 0;
+        Array.from(data).forEach(dt=>{
+            sum+=data[dt];
+        });
+        console.log(data);
+        var color = d3.scaleOrdinal()
+          .domain(data)
+          .range(d3.schemeCategory10);
+        
+        var pie_obj = d3.pie()
+          .value(function(d) {return d.value; });
+
+        var data_ready = pie_obj(d3.entries(data));
+
+        var arcGenerator = d3.arc()
+            .innerRadius(0)
+            .outerRadius(radius)
+        
+        svg
+            .selectAll('mySlices')
+            .data(data_ready)
+            .enter()
+            .append('path')
+              .attr('d', arcGenerator)
+              .attr('fill', function(d){ return(color(d.data.key)); })
+              .attr("stroke", "black")
+              .style("stroke-width", "2px")
+              .style("opacity", 0.7)
+              
+        
+        svg
+            .selectAll('mySlices')
+            .data(data_ready)
+            .enter()
+            .append('text')
+            .text(function(d){ return d.data.key + ' : ' + d.data.value.toString()})
+            .attr("transform", function(d) {
+                d.outerRadius = radius*1.5;
+                d.innerRadius = radius/2;
+                return "translate(" + arcGenerator.centroid(d) + ")rotate(" + angle(d) + ")";})
+            .style("text-anchor", "middle")
+            .style("font-size", 17)
+        //console.log(data);
+        console.log(svg);
+    }
+}
+async function GetPlaceData(prints_keys, params){
+    var new_params = {'prints_IDs': prints_keys, 'who': params.who, 'when': params.when};
+    console.log(new_params);
+    var analytics_url = 'analytics/';
+    const options = {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+            },
+        body: JSON.stringify(new_params)
+    };
+    const placedata_res = await fetch(analytics_url, options);
+    //console.log(placedata_res);
+	const placedata = await placedata_res.json();
+    //console.log(placedata);
+    return placedata.data; 
+    
+}
+function AnalyticsButtonBehavior(prints_keys, params, pieclass) {
+    var anabutton = document.getElementById("AnalyticsButton");
+    console.log(prints_keys);
+    anabutton.addEventListener("click", async (event)=>{
+        var dataplace = await GetPlaceData(prints_keys, params);
+        //console.log(dataplace);
+        var buttontxt = anabutton.textContent;
+        if (buttontxt=="See Place Data Analytics") {
+            /*Array.from(prints_keys).forEach(pkey=>{
+                console.log(prints_info[pkey]);
+            });*/
+            MakingPie(dataplace, params, pieclass);
+            anabutton.textContent= "Hide Analytics";
+
+        } else {
+            document.getElementById(pieclass+"s").remove();
+            anabutton.textContent= "See Place Data Analytics";
+        }
+        console.log(buttontxt);
+    });
 }
 function printlist(d) {
     console.log('prints list required');
@@ -257,6 +502,23 @@ async function GetKeyList(params) {
 }
 
 async function MakeResultsAppear(params) {
+    var div_main = document.getElementById("main");
+    var main_class = div_main.getAttribute("class");
+    var map = document.getElementById("EPYWmap");
+    var map_class = map.getAttribute("class");
+    console.log(main_class);
+    if (main_class=="map_parts"){
+        console.log("cleaning up!");
+        while (div_main.lastElementChild.getAttribute("id")!="EPYWmap"){
+            div_main.removeChild(div_main.lastElementChild);
+        }
+
+        map.setAttribute("class", map_class.slice(11));
+        div_main.setAttribute("class", "only_map");
+        EPYWmap.invalidateSize();
+        EPYWmap.setView([33.513056, 36.291944], 4);
+        console.log(div_main);
+    }
     //console.log(params);
     var markers_data = new Array();
     const markers_url = 'all_markers/';
@@ -268,6 +530,7 @@ async function MakeResultsAppear(params) {
     //console.log(markers);
     markers_len = markers.length;
     n=1;
+    dic_markers = {};
     Array.from(markers).forEach(async (m) => {
         var mark_id = m.ID_PLACE;
         //var mark_lat = m.LATITUDE;
@@ -281,12 +544,13 @@ async function MakeResultsAppear(params) {
             klist.push(k.Key);
         });
 
-        var data_m = {'LATITUDE': m.LATITUDE, 'LONGITUD': m.LONGITUD, 'radius': klist.length, 'key_list' : klist};
+        var data_m = {'id_place': 'place_' + mark_id.toString(), 'LATITUDE': m.LATITUDE, 'LONGITUD': m.LONGITUD, 'radius': klist.length, 'key_list' : klist};
         //var data_m = {'LATITUDE': m.LATITUDE, 'LONGITUD': m.LONGITUD, 'radius': klist.length};
         
         markers_data.push(data_m);
+        dic_markers[data_m.id_place]=klist;
         if (n==markers_len) {
-            d3circles(markers_data);
+            d3circles(markers_data, dic_markers, params);
         } else {
             n+=1;
         }
@@ -324,7 +588,7 @@ function ButtonSubmit() {
             var someyear = document.getElementById('someyear');
             var whenever_val = whenever.checked;
             var someyear_val = someyear.checked;
-            if (whenever_val == false && everyone_val == false) {
+            if (whenever_val == false && someyear_val == false) {
                 alert('You need to check one or the other box to set the date parameter.')
             } else if (whenever_val == true) {
                 var params = {'who': 'all', 'when': 'all'};
@@ -343,7 +607,7 @@ function ButtonSubmit() {
             var someyear = document.getElementById('someyear');
             var whenever_val = whenever.checked;
             var someyear_val = someyear.checked;
-            if (whenever_val == false && everyone_val == false) {
+            if (whenever_val == false && someyear_val == false) {
                 alert('You need to check one or the other box to set the date parameter.')
             } else if (whenever_val == true) {
                 var params = {'who': who.value, 'when': 'all'};

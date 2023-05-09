@@ -10,7 +10,7 @@
   "license": "SEE LICENSE IN license.txt",
   "dependencies": {
     "express": "^4.18.2",
-    "nodemon": "^2.0.21",
+    "nodemon": "^2.0.22",
     "sqlite3": "^5.1.6"
   }
 }
